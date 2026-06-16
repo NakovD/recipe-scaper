@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# TypeScript compiled output
+dist/
+
+# Playwright browsers
+/playwright-browsers/
+
+# Scraped content
+recipes/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment variables
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
