@@ -8,14 +8,17 @@ const OUTPUT_DIR = "./recipes";
 const SETTINGS_DIR = "./settings";
 const SETTINGS_PATH = path.join(SETTINGS_DIR, "settings.json");
 
-// Колко страници (списъци с рецепти) да обходи МАКСИМУМ в тази сесия,
-// преди автоматично да спре. Ctrl+C по всяко време работи независимо от това.
 const MAX_PAGES_PER_SESSION = 3;
 
+interface CollectedLink {
+	url: string;
+	page: number;
+}
+
 interface Settings {
-	lastCompletedPage: number; // последната напълно обходена страница от /brutalni-recepti/N/
-	collectedLinks: string[]; // всички линкове към рецепти, събрани досега
-	savedSlugs: string[]; // slug-ове на вече запазени HTML файлове
+	lastCompletedPage: number;
+	collectedLinks: CollectedLink[];
+	savedSlugs: string[];
 }
 
 function loadSettings(): Settings {
@@ -30,12 +33,23 @@ function loadSettings(): Settings {
 	};
 }
 
-function saveSettings(settings: Settings): void {
+function saveSettings(
+	lastCompletedPage: number,
+	collectedMap: Map<string, number>,
+	savedSet: Set<string>,
+): void {
 	fs.mkdirSync(SETTINGS_DIR, { recursive: true });
+	const settings: Settings = {
+		lastCompletedPage,
+		collectedLinks: Array.from(collectedMap.entries()).map(([url, page]) => ({
+			url,
+			page,
+		})),
+		savedSlugs: Array.from(savedSet),
+	};
 	fs.writeFileSync(SETTINGS_PATH, JSON.stringify(settings, null, 2), "utf-8");
 }
 
-// Случайно забавяне в зададен диапазон (ms), за да не е trafикът равномерен/подозрителен
 function randomDelay(minMs: number, maxMs: number): Promise<void> {
 	const ms = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
 	return new Promise((resolve) => setTimeout(resolve, ms));
@@ -49,11 +63,16 @@ async function main(): Promise<void> {
 	fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
 	const settings = loadSettings();
-	const collectedSet = new Set<string>(settings.collectedLinks);
+
+	// url → page номер
+	const collectedMap = new Map<string, number>(
+		settings.collectedLinks.map(({ url, page }) => [url, page]),
+	);
 	const savedSet = new Set<string>(settings.savedSlugs);
+	let lastCompletedPage = settings.lastCompletedPage;
 
 	console.log(
-		`Зареден прогрес: страница ${settings.lastCompletedPage} завършена, ${collectedSet.size} линка събрани, ${savedSet.size} рецепти запазени.`,
+		`Зареден прогрес: страница ${lastCompletedPage} завършена, ${collectedMap.size} линка събрани, ${savedSet.size} рецепти запазени.`,
 	);
 
 	const browser = await chromium.launch({ headless: false });
@@ -64,14 +83,9 @@ async function main(): Promise<void> {
 	console.log("Логни се ръчно в браузъра и натисни Enter тук...");
 	await new Promise((resolve) => process.stdin.once("data", resolve));
 
-	// Позволява чисто спиране с Ctrl+C — пазим текущия settings обект преди изход
 	process.on("SIGINT", async () => {
 		console.log("\n\nПрекъснато ръчно (Ctrl+C). Запазвам прогреса...");
-		saveSettings({
-			lastCompletedPage: settings.lastCompletedPage,
-			collectedLinks: Array.from(collectedSet),
-			savedSlugs: Array.from(savedSet),
-		});
+		saveSettings(lastCompletedPage, collectedMap, savedSet);
 		await browser.close();
 		process.exit(0);
 	});
@@ -79,7 +93,7 @@ async function main(): Promise<void> {
 	// ----- Фаза 1: Събиране на линкове -----
 	console.log("\nЗапочвам събиране на линкове...");
 
-	let currentPage = settings.lastCompletedPage + 1;
+	let currentPage = lastCompletedPage + 1;
 	let pagesVisitedThisSession = 0;
 
 	while (pagesVisitedThisSession < MAX_PAGES_PER_SESSION) {
@@ -93,29 +107,23 @@ async function main(): Promise<void> {
 			(anchors) => anchors.map((a) => (a as HTMLAnchorElement).href),
 		);
 
-		const newLinks = links.filter((l) => !collectedSet.has(l));
-
 		if (links.length === 0) {
 			console.log("Страницата е празна — достигнахме края на списъка.");
 			break;
 		}
 
-		newLinks.forEach((l) => {
-			collectedSet.add(l);
+		const newLinks = links.filter((url) => !collectedMap.has(url));
+		newLinks.forEach((url) => {
+			collectedMap.set(url, currentPage);
 		});
 		console.log(
-			`  Намерени: ${newLinks.length} нови (общо: ${collectedSet.size})`,
+			`  Намерени: ${newLinks.length} нови (общо: ${collectedMap.size})`,
 		);
 
-		settings.lastCompletedPage = currentPage;
+		lastCompletedPage = currentPage;
 		pagesVisitedThisSession++;
 
-		// Запазваме прогреса след всяка страница, за да е safe резюмирането
-		saveSettings({
-			lastCompletedPage: settings.lastCompletedPage,
-			collectedLinks: Array.from(collectedSet),
-			savedSlugs: Array.from(savedSet),
-		});
+		saveSettings(lastCompletedPage, collectedMap, savedSet);
 
 		currentPage++;
 		await randomDelay(2000, 6000);
@@ -129,39 +137,44 @@ async function main(): Promise<void> {
 
 	// ----- Фаза 2: Запазване на рецепти -----
 	console.log(
-		`\nЗапочвам запазване на рецепти (общо събрани: ${collectedSet.size})...`,
+		`\nЗапочвам запазване на рецепти (общо събрани: ${collectedMap.size})...`,
 	);
-	const links = Array.from(collectedSet);
+	const allLinks = Array.from(collectedMap.entries());
 
-	for (let i = 0; i < links.length; i++) {
-		const url = links[i];
-		if (!url) continue; // За всеки случай, ако има някакви празни стойности
+	for (let i = 0; i < allLinks.length; i++) {
+		const data = allLinks.at(i);
+		if (!data) continue;
+		const [url, pageNum] = data;
+		if (!url || !pageNum) continue;
 		const slug = slugFromUrl(url);
 
 		if (savedSet.has(slug)) {
 			console.log(
-				`  [${i + 1}/${links.length}] Пропускам (вече запазена): ${slug}`,
+				`  [${i + 1}/${allLinks.length}] Пропускам (вече запазена): ${slug}`,
 			);
 			continue;
 		}
 
-		const filePath = path.join(OUTPUT_DIR, `${slug}.html`);
+		// Създаваме подпапка /recipes/1/, /recipes/2/ и т.н.
+		const pageDir = path.join(OUTPUT_DIR, String(pageNum));
+		fs.mkdirSync(pageDir, { recursive: true });
+		const filePath = path.join(pageDir, `${slug}.html`);
 
 		try {
 			await page.goto(url, { waitUntil: "networkidle" });
 			const html = await page.content();
 			fs.writeFileSync(filePath, html, "utf-8");
 			savedSet.add(slug);
-			console.log(`  [${i + 1}/${links.length}] ✓ ${slug}`);
+			console.log(
+				`  [${i + 1}/${allLinks.length}] ✓ [страница ${pageNum}] ${slug}`,
+			);
 
-			// Запазваме прогреса след всяка рецепта
-			saveSettings({
-				lastCompletedPage: settings.lastCompletedPage,
-				collectedLinks: Array.from(collectedSet),
-				savedSlugs: Array.from(savedSet),
-			});
+			saveSettings(lastCompletedPage, collectedMap, savedSet);
 		} catch (err) {
-			console.error(`  [${i + 1}/${links.length}] ✗ Грешка при ${url}:`, err);
+			console.error(
+				`  [${i + 1}/${allLinks.length}] ✗ Грешка при ${url}:`,
+				err,
+			);
 		}
 
 		await randomDelay(2000, 6000);

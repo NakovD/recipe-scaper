@@ -10,6 +10,8 @@ dist/
 # Scraped content
 recipes/
 
+settings/
+
 # Logs
 *.log
 npm-debug.log*
