@@ -1,3 +1,5 @@
+import * as path from "node:path";
+import fastifyStatic from "@fastify/static";
 import Fastify from "fastify";
 import { buildRecipeIndex } from "./recipeIndex.js";
 import type { Recipe } from "./recipeTypes.js";
@@ -9,6 +11,11 @@ const recipeIndex: Recipe[] = buildRecipeIndex();
 console.log(`Indexed ${recipeIndex.length} recipes.`);
 
 const app = Fastify({ logger: true });
+
+await app.register(fastifyStatic, {
+	root: path.resolve("./recipes"),
+	prefix: "/recipes/",
+});
 
 app.get("/api/recipes", async (request) => {
 	const query = request.query as { page?: string; limit?: string };
