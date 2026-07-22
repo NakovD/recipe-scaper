@@ -2,12 +2,11 @@ import * as path from "node:path";
 import fastifyStatic from "@fastify/static";
 import Fastify from "fastify";
 import { buildRecipeIndex } from "./recipeIndex.js";
-import type { Recipe } from "./recipeTypes.js";
+import { registerRecipeRoutes } from "./recipeRoutes.js";
 
 const PORT = 3000;
-const DEFAULT_LIMIT = 20;
 
-const recipeIndex: Recipe[] = buildRecipeIndex();
+const recipeIndex = buildRecipeIndex();
 console.log(`Indexed ${recipeIndex.length} recipes.`);
 
 const app = Fastify({ logger: true });
@@ -17,21 +16,7 @@ await app.register(fastifyStatic, {
 	prefix: "/recipes/",
 });
 
-app.get("/api/recipes", async (request) => {
-	const query = request.query as { page?: string; limit?: string };
-
-	const page = Math.max(1, Number(query.page) || 1);
-	const limit = Math.max(1, Number(query.limit) || DEFAULT_LIMIT);
-	const start = (page - 1) * limit;
-
-	return {
-		items: recipeIndex.slice(start, start + limit),
-		total: recipeIndex.length,
-		page,
-		limit,
-		totalPages: Math.ceil(recipeIndex.length / limit),
-	};
-});
+registerRecipeRoutes(app, recipeIndex);
 
 app.listen({ port: PORT }, (err) => {
 	if (err) {
