@@ -40,7 +40,11 @@ export const registerRecipeRoutes = (
 
 		const matches = search(query.q)
 			.slice(0, AUTOCOMPLETE_LIMIT)
-			.map((recipe) => ({ slug: recipe.slug, title: recipe.title }));
+			.map((recipe) => ({
+				slug: recipe.slug,
+				title: recipe.title,
+				htmlFile: recipe.htmlFile,
+			}));
 		return { items: matches };
 	});
 };

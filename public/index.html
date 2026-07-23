@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="bg">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Брутално вкусно — локален архив</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+	<header>
+		<h1>Рецепти</h1>
+		<div class="search-wrap">
+			<input id="search-input" type="text" placeholder="Търси по заглавие или съставка...">
+			<div id="autocomplete" class="autocomplete" hidden></div>
+		</div>
+	</header>
+	<main>
+		<div id="results" class="recipe-grid"></div>
+		<div id="pagination" class="pagination"></div>
+	</main>
+	<script type="module" src="js/main.js"></script>
+</body>
+</html>

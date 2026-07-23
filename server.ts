@@ -16,6 +16,12 @@ await app.register(fastifyStatic, {
 	prefix: "/recipes/",
 });
 
+await app.register(fastifyStatic, {
+	root: path.resolve("./public"),
+	prefix: "/",
+	decorateReply: false,
+});
+
 registerRecipeRoutes(app, recipeIndex);
 
 app.listen({ port: PORT }, (err) => {
