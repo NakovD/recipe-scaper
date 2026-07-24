@@ -123,6 +123,29 @@ main {
 	border-radius: 999px;
 }
 
+.category-filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-top: 0.8rem;
+	max-width: 480px;
+}
+
+.chip {
+	padding: 0.35rem 0.9rem;
+	border-radius: 999px;
+	border: 1px solid #ccc;
+	background: #fff;
+	cursor: pointer;
+	font-size: 0.85rem;
+}
+
+.chip.active {
+	background: #222;
+	color: #fff;
+	border-color: #222;
+}
+
 .pagination {
 	display: flex;
 	justify-content: center;

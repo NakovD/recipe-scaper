@@ -16,6 +16,13 @@ const paginate = (items: Recipe[], page: number, limit: number) => {
 	};
 };
 
+const parseCategories = (raw: string | undefined): string[] =>
+	raw ? raw.split(",").filter(Boolean) : [];
+
+// A recipe must carry every selected category (intersection), not just one of them.
+const matchesAllCategories = (recipe: Recipe, categories: string[]): boolean =>
+	categories.every((category) => recipe.categories.includes(category));
+
 export const registerRecipeRoutes = (
 	app: FastifyInstance,
 	recipeIndex: Recipe[],
@@ -27,10 +34,19 @@ export const registerRecipeRoutes = (
 			page?: string;
 			limit?: string;
 			q?: string;
+			categories?: string;
 		};
 		const page = Math.max(1, Number(query.page) || 1);
 		const limit = Math.max(1, Number(query.limit) || DEFAULT_LIMIT);
-		const results = query.q ? search(query.q) : recipeIndex;
+		const categories = parseCategories(query.categories);
+
+		let results = query.q ? search(query.q) : recipeIndex;
+		if (categories.length > 0) {
+			results = results.filter((recipe) =>
+				matchesAllCategories(recipe, categories),
+			);
+		}
+
 		return paginate(results, page, limit);
 	});
 
