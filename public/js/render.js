@@ -27,6 +27,11 @@ const renderCard = (recipe) => `
 `;
 
 export const renderRecipeList = (container, recipes) => {
+	if (recipes.length === 0) {
+		container.innerHTML = `<p class="empty-state">Няма намерени рецепти.</p>`;
+		return;
+	}
+
 	container.innerHTML = recipes.map(renderCard).join("");
 	for (const img of container.querySelectorAll("img")) {
 		img.addEventListener("error", handleImageError);

@@ -9,9 +9,15 @@
 <body>
 	<header>
 		<h1>Рецепти</h1>
-		<div class="search-wrap">
-			<input id="search-input" type="text" placeholder="Търси по заглавие или съставка...">
-			<div id="autocomplete" class="autocomplete" hidden></div>
+		<div class="search-row">
+			<div class="search-wrap">
+				<div class="search-input-row">
+					<input id="search-input" type="text" placeholder="Търси по заглавие или съставка...">
+					<button id="clear-search" class="clear-input-btn" type="button" aria-label="Изчисти търсенето" hidden>&times;</button>
+				</div>
+				<div id="autocomplete" class="autocomplete" hidden></div>
+			</div>
+			<button id="reset-all" class="reset-btn" type="button">Изчисти филтрите</button>
 		</div>
 		<div id="category-filters" class="category-filters"></div>
 	</header>

@@ -3,19 +3,20 @@ import { setupAutocomplete } from "./autocomplete.js";
 import { renderCategoryFilters } from "./categoryFilter.js";
 import { renderPagination } from "./pagination.js";
 import { renderRecipeList } from "./render.js";
+import { clearSearchInput, setupSearchBox } from "./searchBox.js";
 
 const LIMIT = 20;
-const SEARCH_DEBOUNCE_MS = 300;
 
 const resultsEl = document.getElementById("results");
 const paginationEl = document.getElementById("pagination");
 const searchInput = document.getElementById("search-input");
+const clearSearchBtn = document.getElementById("clear-search");
 const autocompleteEl = document.getElementById("autocomplete");
 const categoryFiltersEl = document.getElementById("category-filters");
+const resetAllBtn = document.getElementById("reset-all");
 
 let currentQuery = "";
 const activeCategories = new Set();
-let searchDebounceTimer;
 
 const loadPage = async (page) => {
 	const data = await fetchRecipes(page, LIMIT, currentQuery, [
@@ -35,14 +36,18 @@ const toggleCategory = (category) => {
 	loadPage(1);
 };
 
-searchInput.addEventListener("input", () => {
-	clearTimeout(searchDebounceTimer);
-	searchDebounceTimer = setTimeout(() => {
-		currentQuery = searchInput.value.trim();
-		loadPage(1);
-	}, SEARCH_DEBOUNCE_MS);
+resetAllBtn.addEventListener("click", () => {
+	clearSearchInput(searchInput, clearSearchBtn, autocompleteEl);
+	currentQuery = "";
+	activeCategories.clear();
+	renderCategoryFilters(categoryFiltersEl, activeCategories, toggleCategory);
+	loadPage(1);
 });
 
+setupSearchBox(searchInput, clearSearchBtn, autocompleteEl, (query) => {
+	currentQuery = query;
+	loadPage(1);
+});
 setupAutocomplete(searchInput, autocompleteEl);
 renderCategoryFilters(categoryFiltersEl, activeCategories, toggleCategory);
 
