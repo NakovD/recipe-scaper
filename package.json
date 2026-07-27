@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "scrape": "ts-node scraper.ts",
-    "serve": "tsx server.ts"
+    "build:frontend": "tsc -p tsconfig.frontend.json",
+    "serve": "npm run build:frontend && tsx server.ts"
   },
   "keywords": [],
   "author": "",

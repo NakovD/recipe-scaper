@@ -1,15 +1,16 @@
 import { escapeHtml } from "./escapeHtml.js";
 import { handleImageError } from "./imageFallback.js";
+import type { Recipe } from "./types.js";
 
 const HIDDEN_CATEGORIES = new Set(["Платени рецепти"]);
 
-const renderBadges = (categories) =>
+const renderBadges = (categories: string[]): string =>
 	categories
 		.filter((category) => !HIDDEN_CATEGORIES.has(category))
 		.map((category) => `<span class="badge">${escapeHtml(category)}</span>`)
 		.join("");
 
-const renderImage = (recipe) => {
+const renderImage = (recipe: Recipe): string => {
 	if (!recipe.image)
 		return `<div class="recipe-image-wrap image-missing"></div>`;
 
@@ -18,7 +19,7 @@ const renderImage = (recipe) => {
 	</div>`;
 };
 
-const renderCard = (recipe) => `
+const renderCard = (recipe: Recipe): string => `
 	<a class="recipe-card" href="/recipes/${recipe.htmlFile}" target="_blank" rel="noopener noreferrer">
 		${renderImage(recipe)}
 		<h3>${escapeHtml(recipe.title)}</h3>
@@ -26,7 +27,10 @@ const renderCard = (recipe) => `
 	</a>
 `;
 
-export const renderRecipeList = (container, recipes) => {
+export const renderRecipeList = (
+	container: HTMLElement,
+	recipes: Recipe[],
+): void => {
 	if (recipes.length === 0) {
 		container.innerHTML = `<p class="empty-state">Няма намерени рецепти.</p>`;
 		return;

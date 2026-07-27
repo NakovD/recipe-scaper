@@ -7,18 +7,20 @@ import { clearSearchInput, setupSearchBox } from "./searchBox.js";
 
 const LIMIT = 20;
 
-const resultsEl = document.getElementById("results");
-const paginationEl = document.getElementById("pagination");
-const searchInput = document.getElementById("search-input");
-const clearSearchBtn = document.getElementById("clear-search");
-const autocompleteEl = document.getElementById("autocomplete");
-const categoryFiltersEl = document.getElementById("category-filters");
-const resetAllBtn = document.getElementById("reset-all");
+const resultsEl = document.getElementById("results") as HTMLElement;
+const paginationEl = document.getElementById("pagination") as HTMLElement;
+const searchInput = document.getElementById("search-input") as HTMLInputElement;
+const clearSearchBtn = document.getElementById("clear-search") as HTMLElement;
+const autocompleteEl = document.getElementById("autocomplete") as HTMLElement;
+const categoryFiltersEl = document.getElementById(
+	"category-filters",
+) as HTMLElement;
+const resetAllBtn = document.getElementById("reset-all") as HTMLElement;
 
 let currentQuery = "";
-const activeCategories = new Set();
+const activeCategories = new Set<string>();
 
-const loadPage = async (page) => {
+const loadPage = async (page: number): Promise<void> => {
 	const data = await fetchRecipes(page, LIMIT, currentQuery, [
 		...activeCategories,
 	]);
@@ -26,7 +28,7 @@ const loadPage = async (page) => {
 	renderPagination(paginationEl, data.page, data.totalPages, loadPage);
 };
 
-const toggleCategory = (category) => {
+const toggleCategory = (category: string): void => {
 	if (activeCategories.has(category)) {
 		activeCategories.delete(category);
 	} else {

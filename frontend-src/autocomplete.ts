@@ -1,9 +1,13 @@
 import { fetchAutocomplete } from "./api.js";
 import { escapeHtml } from "./escapeHtml.js";
+import type { AutocompleteItem } from "./types.js";
 
 const DEBOUNCE_MS = 250;
 
-const renderSuggestions = (container, suggestions) => {
+const renderSuggestions = (
+	container: HTMLElement,
+	suggestions: AutocompleteItem[],
+): void => {
 	container.innerHTML = suggestions
 		.map(
 			(item) =>
@@ -13,8 +17,11 @@ const renderSuggestions = (container, suggestions) => {
 	container.hidden = suggestions.length === 0;
 };
 
-export const setupAutocomplete = (input, container) => {
-	let debounceTimer;
+export const setupAutocomplete = (
+	input: HTMLInputElement,
+	container: HTMLElement,
+): void => {
+	let debounceTimer: ReturnType<typeof setTimeout>;
 
 	input.addEventListener("input", () => {
 		clearTimeout(debounceTimer);
@@ -34,7 +41,7 @@ export const setupAutocomplete = (input, container) => {
 	// Close on an outside click, but a click on a suggestion (which opens in a
 	// new tab) should leave the dropdown open in this tab.
 	document.addEventListener("click", (event) => {
-		if (event.target !== input && !container.contains(event.target)) {
+		if (event.target !== input && !container.contains(event.target as Node)) {
 			container.hidden = true;
 		}
 	});

@@ -6,10 +6,10 @@ export const FILTER_CATEGORIES = [
 ];
 
 export const renderCategoryFilters = (
-	container,
-	activeCategories,
-	onToggle,
-) => {
+	container: HTMLElement,
+	activeCategories: Set<string>,
+	onToggle: (category: string) => void,
+): void => {
 	container.innerHTML = "";
 
 	for (const category of FILTER_CATEGORIES) {
