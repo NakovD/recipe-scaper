@@ -3,6 +3,7 @@ import { createRecipeSearch } from "./recipeSearch.js";
 import type { Recipe } from "./recipeTypes.js";
 
 const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 100;
 const AUTOCOMPLETE_LIMIT = 8;
 
 const paginate = (items: Recipe[], page: number, limit: number) => {
@@ -37,7 +38,10 @@ export const registerRecipeRoutes = (
 			categories?: string;
 		};
 		const page = Math.max(1, Number(query.page) || 1);
-		const limit = Math.max(1, Number(query.limit) || DEFAULT_LIMIT);
+		const limit = Math.min(
+			MAX_LIMIT,
+			Math.max(1, Number(query.limit) || DEFAULT_LIMIT),
+		);
 		const categories = parseCategories(query.categories);
 
 		let results = query.q ? search(query.q) : recipeIndex;
