@@ -1,9 +1,10 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { baseDir } from "./appPaths.js";
 import { parseRecipeFile } from "./recipeParser.js";
 import type { Recipe } from "./recipeTypes.js";
 
-const OUTPUT_DIR = "./recipes";
+const OUTPUT_DIR = path.join(baseDir, "recipes");
 
 const listPageDirs = (): number[] =>
 	fs

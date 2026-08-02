@@ -4,6 +4,7 @@ node_modules/
 # TypeScript compiled output
 dist/
 public/js/
+dist-pkg/
 
 # Playwright browsers
 /playwright-browsers/
