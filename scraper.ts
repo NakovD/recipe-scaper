@@ -2,8 +2,7 @@ import { chromium } from "playwright";
 import { collectLinks } from "./linkCollector.js";
 import { saveRecipes } from "./recipeSaver.js";
 import { loadSettings, saveSettings } from "./settingsStore.js";
-
-const BASE_URL = "https://brutalnovkusno.bg";
+import { BASE_URL } from "./siteConfig.js";
 
 const main = async (): Promise<void> => {
 	const settings = loadSettings();

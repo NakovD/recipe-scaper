@@ -1,11 +1,11 @@
 {
   "name": "recipe-scraper",
   "version": "1.0.0",
-  "description": "Local scraper and browser for recipes from brutalnovkusno.bg",
+  "description": "Local scraper and browser for a recipe website (configured via .env)",
   "type": "module",
   "scripts": {
     "scrape": "tsx scraper.ts",
-    "build:frontend": "tsc -p tsconfig.frontend.json",
+    "build:frontend": "tsx generateDomainConfig.ts && tsc -p tsconfig.frontend.json",
     "serve": "npm run build:frontend && tsx server.ts",
     "bundle:server": "npm run build:frontend && esbuild server.ts --bundle --platform=node --target=node20 --format=cjs --outfile=dist-pkg/server.cjs",
     "package:win": "npm run bundle:server && pkg dist-pkg/server.cjs --sea --output dist-pkg/recipe-browser.exe",

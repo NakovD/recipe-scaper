@@ -1,7 +1,8 @@
 import type { Page } from "playwright";
 import { randomDelay } from "./scraperUtils.js";
+import { BASE_URL } from "./siteConfig.js";
 
-const RECIPES_LIST_URL = "https://brutalnovkusno.bg/brutalni-recepti";
+const RECIPES_LIST_URL = `${BASE_URL}/brutalni-recepti`;
 const MAX_PAGES_PER_SESSION = 3;
 const RECIPE_LINK_SELECTOR =
 	".elementor-loop-container h3.elementor-heading-title a[href]";

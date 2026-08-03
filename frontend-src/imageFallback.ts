@@ -1,5 +1,4 @@
-const OLD_DOMAIN = "brutalnovkusno.com";
-const NEW_DOMAIN = "brutalnovkusno.bg";
+import { NEW_DOMAIN, OLD_DOMAIN } from "./domainConfig.js";
 
 // The site migrated domains at some point; some saved image URLs still point
 // at the old one. Try the new domain once before giving up on the image.

@@ -6,6 +6,9 @@ dist/
 public/js/
 dist-pkg/
 
+# Generated from .env — never commit the real site domain
+frontend-src/domainConfig.ts
+
 # Playwright browsers
 /playwright-browsers/
 
