@@ -2,10 +2,11 @@ import { fetchRecipes } from "./api.js";
 import { setupAutocomplete } from "./autocomplete.js";
 import { renderCategoryFilters } from "./categoryFilter.js";
 import { renderPagination } from "./pagination.js";
-import { renderRecipeList } from "./render.js";
+import { renderLoadingState, renderRecipeList } from "./render.js";
 import { clearSearchInput, setupSearchBox } from "./searchBox.js";
 
 const LIMIT = 20;
+const LOADING_RETRY_MS = 1000;
 
 const resultsEl = document.getElementById("results") as HTMLElement;
 const paginationEl = document.getElementById("pagination") as HTMLElement;
@@ -18,12 +19,20 @@ const categoryFiltersEl = document.getElementById(
 const resetAllBtn = document.getElementById("reset-all") as HTMLElement;
 
 let currentQuery = "";
+let loadingRetryTimer: ReturnType<typeof setTimeout> | undefined;
 const activeCategories = new Set<string>();
 
 const loadPage = async (page: number): Promise<void> => {
 	const data = await fetchRecipes(page, LIMIT, currentQuery, [
 		...activeCategories,
 	]);
+	if (!data) {
+		renderLoadingState(resultsEl);
+		// A single pending retry: filter clicks while loading must not pile up timers.
+		clearTimeout(loadingRetryTimer);
+		loadingRetryTimer = setTimeout(() => loadPage(page), LOADING_RETRY_MS);
+		return;
+	}
 	renderRecipeList(resultsEl, data.items);
 	renderPagination(paginationEl, data.page, data.totalPages, loadPage);
 };

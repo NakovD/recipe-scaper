@@ -45,11 +45,11 @@ const extractTitle = (
 	return h1Match?.[1] ? cleanText(h1Match[1].trim()) : undefined;
 };
 
-export const parseRecipeFile = (
+export const parseRecipeFile = async (
 	filePath: string,
 	pageDir: number,
-): Recipe | undefined => {
-	const html = fs.readFileSync(filePath, "utf-8");
+): Promise<Recipe | undefined> => {
+	const html = await fs.promises.readFile(filePath, "utf-8");
 	const ld = extractRecipeLdJson(html);
 	const title = extractTitle(html, ld);
 	if (!title) return undefined;

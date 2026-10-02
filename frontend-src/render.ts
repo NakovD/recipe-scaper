@@ -27,6 +27,10 @@ const renderCard = (recipe: Recipe): string => `
 	</a>
 `;
 
+export const renderLoadingState = (container: HTMLElement): void => {
+	container.innerHTML = `<p class="empty-state">Зареждам рецептите… Първото стартиране може да отнеме няколко минути.</p>`;
+};
+
 export const renderRecipeList = (
 	container: HTMLElement,
 	recipes: Recipe[],

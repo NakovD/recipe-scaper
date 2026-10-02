@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { createRecipeSearch } from "./recipeSearch.js";
+import { getLoadedRecipes } from "./recipeStore.js";
 import type { Recipe } from "./recipeTypes.js";
 
 const DEFAULT_LIMIT = 20;
@@ -24,13 +24,15 @@ const parseCategories = (raw: string | undefined): string[] =>
 const matchesAllCategories = (recipe: Recipe, categories: string[]): boolean =>
 	categories.every((category) => recipe.categories.includes(category));
 
-export const registerRecipeRoutes = (
-	app: FastifyInstance,
-	recipeIndex: Recipe[],
-): void => {
-	const search = createRecipeSearch(recipeIndex);
+// 503 tells the frontend the recipes are still loading and it should retry.
+const LOADING_RESPONSE = { loading: true };
 
-	app.get("/api/recipes", async (request) => {
+export const registerRecipeRoutes = (app: FastifyInstance): void => {
+	app.get("/api/recipes", async (request, reply) => {
+		const loaded = getLoadedRecipes();
+		if (!loaded) return reply.code(503).send(LOADING_RESPONSE);
+		const { recipeIndex, search } = loaded;
+
 		const query = request.query as {
 			page?: string;
 			limit?: string;
@@ -54,11 +56,15 @@ export const registerRecipeRoutes = (
 		return paginate(results, page, limit);
 	});
 
-	app.get("/api/recipes/autocomplete", async (request) => {
+	app.get("/api/recipes/autocomplete", async (request, reply) => {
+		const loaded = getLoadedRecipes();
+		if (!loaded) return reply.code(503).send(LOADING_RESPONSE);
+
 		const query = request.query as { q?: string };
 		if (!query.q) return { items: [] };
 
-		const matches = search(query.q)
+		const matches = loaded
+			.search(query.q)
 			.slice(0, AUTOCOMPLETE_LIMIT)
 			.map((recipe) => ({
 				slug: recipe.slug,

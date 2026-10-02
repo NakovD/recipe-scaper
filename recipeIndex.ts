@@ -14,7 +14,9 @@ const listPageDirs = (): number[] =>
 		.filter((n) => !Number.isNaN(n))
 		.sort((a, b) => a - b);
 
-export const buildRecipeIndex = (): Recipe[] => {
+// Async on purpose: the first read of these files after a long idle can be very
+// slow (antivirus scanning), and the server must stay responsive meanwhile.
+export const buildRecipeIndex = async (): Promise<Recipe[]> => {
 	const recipes: Recipe[] = [];
 	if (!fs.existsSync(OUTPUT_DIR)) return recipes;
 
@@ -23,7 +25,7 @@ export const buildRecipeIndex = (): Recipe[] => {
 		const files = fs.readdirSync(dirPath).filter((f) => f.endsWith(".html"));
 
 		for (const file of files) {
-			const recipe = parseRecipeFile(path.join(dirPath, file), pageDir);
+			const recipe = await parseRecipeFile(path.join(dirPath, file), pageDir);
 			if (recipe) recipes.push(recipe);
 		}
 	}

@@ -3,15 +3,22 @@ import * as path from "node:path";
 import fastifyStatic from "@fastify/static";
 import Fastify from "fastify";
 import { baseDir } from "./appPaths.js";
-import { buildRecipeIndex } from "./recipeIndex.js";
 import { registerRecipeRoutes } from "./recipeRoutes.js";
+import { loadRecipes } from "./recipeStore.js";
 
 const PORT = 3000;
 
-const main = async (): Promise<void> => {
-	const recipeIndex = buildRecipeIndex();
-	console.log(`Indexed ${recipeIndex.length} recipes.`);
+const loadRecipesInBackground = (): void => {
+	console.log("Loading recipes... (the first start can take a few minutes)");
+	loadRecipes()
+		.then((count) => console.log(`Indexed ${count} recipes.`))
+		.catch((err) => {
+			console.error("Failed to load recipes:", err);
+			process.exit(1);
+		});
+};
 
+const main = async (): Promise<void> => {
 	const app = Fastify({ logger: true });
 
 	await app.register(fastifyStatic, {
@@ -25,7 +32,7 @@ const main = async (): Promise<void> => {
 		decorateReply: false,
 	});
 
-	registerRecipeRoutes(app, recipeIndex);
+	registerRecipeRoutes(app);
 
 	app.listen({ port: PORT }, (err) => {
 		if (err) {
@@ -38,6 +45,7 @@ const main = async (): Promise<void> => {
 		if (process.platform === "win32") {
 			exec(`start "" "${url}"`);
 		}
+		loadRecipesInBackground();
 	});
 };
 
